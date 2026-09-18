@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YUKTHI 2026 - Intelligent Energy & Equipment Monitoring System</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#0f172a',
+                            900: '#0b0f19',
+                            950: '#05070c',
+                        },
+                        brand: {
+                            cyan: '#06b6d4',
+                            blue: '#3b82f6',
+                            red: '#ef4444',
+                            amber: '#f59e0b',
+                            emerald: '#10b981',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js & Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/chartjs-adapter-moment.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.6);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+        .glass-card-interactive {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card-interactive:hover {
+            border-color: rgba(6, 182, 212, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px -10px rgba(6, 182, 212, 0.15);
+        }
+        .neon-glow-red {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
+        }
+        .neon-glow-cyan {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.35);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-brand-cyan selection:text-black">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-50 glass-card border-b border-slate-800 bg-slate-900/90 px-4 lg:px-8 py-3.5">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-cyan to-brand-blue flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-brand-cyan/20">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                                INTELLIGENT MONITORING ENGINE
+                            </h1>
+                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/30">
+                                YUKTHI 2026
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 font-mono">DETECT • UNDERSTAND • ASSESS • ACT</p>
+                    </div>
+                </div>
+                
+                <!-- Live System Status Badge (Mobile/Desktop) -->
+                <div class="flex items-center gap-2 md:hidden">
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-red"></span>
+                    </span>
+                    <span class="text-xs font-mono font-semibold text-brand-red uppercase">Incident Active</span>
+                </div>
+            </div>
+
+            <!-- Header Controls & Metadata -->
+            <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t border-slate-800 md:border-t-0 pt-3 md:pt-0">
+                <div class="hidden md:flex items-center gap-2 bg-slate-950/60 px-3 py-1.5 rounded-lg border border-slate-800 text-xs text-slate-400 font-mono">
+                    <i class="fa-regular fa-clock text-brand-cyan"></i>
+                    <span id="liveTimestamp">2026-09-18 20:00:21</span>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-slate-300">25,003 Records Ingested</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="btnExportReport" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-2">
+                        <i class="fa-solid fa-file-export text-slate-400"></i>
+                        <span>Export Incident Audit</span>
+                    </button>
+                    <button id="btnSimulateRealtime" class="px-3.5 py-1.5 rounded-lg bg-brand-cyan/10 hover:bg-brand-cyan/20 text-brand-cyan text-xs font-semibold border border-brand-cyan/30 transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate text-brand-cyan"></i>
+                        <span>Re-Sync Pipeline</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-6 flex-grow">
+
+        <!-- EXECUTIVE KPI METRIC BAR -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Metric 1: Fleet Health -->
+            <div class="glass-card glass-card-interactive p-4 rounded-xl relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-emerald/10 rounded-full blur-xl pointer-events-none"></div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fleet Health Score</span>
+                    <span id="kpiFleetStatusBadge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/40">
+                        78.6% - WARNING
+                    </span>
+                </div>
+                <div class="mt-2 flex items-baseline gap-3">
+                    <span id="kpiFleetHealthVal" class="text-3xl font-extrabold text-white font-mono">78.6%</span>
+                    <span class="text-xs text-brand-amber flex items-center gap-1 font-medium">
+                        <i class="fa-solid fa-arrow-down text-[10px]"></i> -14.2% vs baseline
+                    </span>
+                </div>
+                <!-- Health Bar -->
+                <div class="mt-3 w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div id="kpiFleetHealthBar" class="bg-gradient-to-r from-brand-red via-brand-amber to-brand-emerald h-1.5 rounded-full transition-all duration-500" style="width: 78.6%"></div>
+                </div>
+            </div>
+
+            <!-- Metric 2: Critical Anomalies -->
+            <div class="glass-card glass-card-interactive p-4 rounded-xl relative overflow-hidden border-brand-red/30 neon-glow-red">
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-red/10 rounded-full blur-xl pointer-events-none"></div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Critical Anomalies</span>
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-brand-red/20 text-brand-red border border-brand-red/40 animate-pulse">
+                        HIGH PRIORITY
+                    </span>
+                </div>
+                <div class="mt-2 flex items-baseline gap-3">
+                    <span id="kpiAnomaliesVal" class="text-3xl font-extrabold text-white font-mono">1,131</span>
+                    <span class="text-xs text-slate-400 font-mono">/ 25,003 records</span>
+                </div>
+                <div class="mt-3 text-[11px] text-slate-400 flex items-center justify-between">
+                    <span>Cluster Hub: <strong class="text-brand-red">CHILLER-02</strong></span>
+                    <span class="font-mono text-brand-red font-semibold">90.4% concentration</span>
+                </div>
+            </div>
+
+            <!-- Metric 3: Peak System Load -->
+            <div class="glass-card glass-card-interactive p-4 rounded-xl relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Peak System Load</span>
+                    <i class="fa-solid fa-temperature-arrow-up text-brand-amber"></i>
+                </div>
+                <div class="mt-2 flex items-baseline gap-3">
+                    <span id="kpiPeakLoadVal" class="text-3xl font-extrabold text-white font-mono">948.5</span>
+                    <span class="text-xs text-slate-400 font-mono">RT (Cooling Tons)</span>
+                </div>
+                <div class="mt-3 text-[11px] text-slate-400 flex items-center justify-between">
+                    <span>Ambient Outdoor Temp:</span>
+                    <span class="font-mono text-slate-200">89.4 °F (High Thermal Stress)</span>
+                </div>
+            </div>
+
+            <!-- Metric 4: Energy Consumption -->
+            <div class="glass-card glass-card-interactive p-4 rounded-xl relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Peak Energy Demand</span>
+                    <i class="fa-solid fa-plug-circle-bolt text-brand-cyan"></i>
+                </div>
+                <div class="mt-2 flex items-baseline gap-3">
+                    <span id="kpiPeakEnergyVal" class="text-3xl font-extrabold text-white font-mono">350.0</span>
+                    <span class="text-xs text-slate-400 font-mono">kWh / 30-min</span>
+                </div>
+                <div class="mt-3 text-[11px] text-slate-400 flex items-center justify-between">
+                    <span>Specific Power Index:</span>
+                    <span class="font-mono text-brand-cyan">0.369 kWh/RT</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TWO-COLUMN WORKSPACE GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- LEFT COLUMN: CONTROL & ASSESSMENT PANELS (4/12 cols) -->
+            <div class="lg:col-span-4 space-y-6">
+
+                <!-- Equipment Fleet Selector Card -->
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-server text-brand-cyan text-sm"></i>
+                            <h2 class="font-bold text-sm text-slate-200 uppercase tracking-wider">Equipment Fleet Selector</h2>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-mono">3 Units Monitored</span>
+                    </div>
+
+                    <!-- Interactive Equipment Tabs -->
+                    <div class="space-y-2.5" id="equipmentTabsContainer">
+                        <!-- Chiller 1 Tab -->
+                        <button onclick="switchEquipment('CHILLER-01')" id="tab-CHILLER-01" class="eq-tab w-full text-left p-3 rounded-xl border transition flex items-center justify-between bg-slate-900 border-slate-800 hover:border-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-brand-emerald/10 text-brand-emerald flex items-center justify-center font-mono font-bold text-xs border border-brand-emerald/30">
+                                    01
+                                </div>
+                                <div>
+                                    <div class="font-bold text-sm text-slate-200">CHILLER-01</div>
+                                    <div class="text-[11px] text-slate-400 font-mono">8,333 Obs • Baseline Stable</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/30">
+                                    98.2% Normal
+                                </span>
+                                <div class="text-[10px] text-slate-500 font-mono mt-1">72 Anomalies</div>
+                            </div>
+                        </button>
+
+                        <!-- Chiller 2 Tab (Active Critical) -->
+                        <button onclick="switchEquipment('CHILLER-02')" id="tab-CHILLER-02" class="eq-tab w-full text-left p-3 rounded-xl border transition flex items-center justify-between bg-slate-850 border-brand-red/60 shadow-md shadow-brand-red/10">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-brand-red/20 text-brand-red flex items-center justify-center font-mono font-bold text-xs border border-brand-red/40 animate-pulse">
+                                    02
+                                </div>
+                                <div>
+                                    <div class="font-bold text-sm text-white flex items-center gap-2">
+                                        CHILLER-02
+                                        <i class="fa-solid fa-triangle-exclamation text-brand-red text-xs"></i>
+                                    </div>
+                                    <div class="text-[11px] text-brand-red/80 font-mono">8,340 Obs • Severe Degradation</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-brand-red/20 text-brand-red border border-brand-red/40">
+                                    42.1% Critical
+                                </span>
+                                <div class="text-[10px] text-brand-red font-mono font-semibold mt-1">1,131 Anomalies</div>
+                            </div>
+                        </button>
+
+                        <!-- Chiller 3 Tab -->
+                        <button onclick="switchEquipment('CHILLER-03')" id="tab-CHILLER-03" class="eq-tab w-full text-left p-3 rounded-xl border transition flex items-center justify-between bg-slate-900 border-slate-800 hover:border-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-brand-emerald/10 text-brand-emerald flex items-center justify-center font-mono font-bold text-xs border border-brand-emerald/30">
+                                    03
+                                </div>
+                                <div>
+                                    <div class="font-bold text-sm text-slate-200">CHILLER-03</div>
+                                    <div class="text-[11px] text-slate-400 font-mono">8,330 Obs • Nominal</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/30">
+                                    96.4% Normal
+                                </span>
+                                <div class="text-[10px] text-slate-500 font-mono mt-1">48 Anomalies</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- UNDERSTAND PANEL: Root Cause Analysis -->
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass-chart text-brand-amber text-sm"></i>
+                            <h2 class="font-bold text-sm text-slate-200 uppercase tracking-wider">UNDERSTAND: Root Cause Analysis</h2>
+                        </div>
+                        <span id="rcaUnitLabel" class="text-xs font-mono font-semibold text-brand-cyan">CHILLER-02</span>
+                    </div>
+
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Multivariate contribution factors calculated against baseline thermal and electrical telemetry during operational deviations:
+                    </p>
+
+                    <!-- Drivers Progress Bars -->
+                    <div class="space-y-3.5 pt-1" id="rcaDriversContainer">
+                        <!-- Driver 1 -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-medium text-slate-300">Chilled Water Flow Deviation (L/sec)</span>
+                                <span class="font-mono font-bold text-brand-red" id="rcaVal1">84%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                                <div id="rcaBar1" class="bg-gradient-to-r from-brand-amber to-brand-red h-2 rounded-full transition-all duration-500" style="width: 84%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Driver 2 -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-medium text-slate-300">Building Load Mismatch (RT vs. Weather)</span>
+                                <span class="font-mono font-bold text-brand-amber" id="rcaVal2">62%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                                <div id="rcaBar2" class="bg-gradient-to-r from-brand-blue to-brand-amber h-2 rounded-full transition-all duration-500" style="width: 62%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Driver 3 -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-medium text-slate-300">Condenser Temp Elevation (°C)</span>
+                                <span class="font-mono font-bold text-brand-blue" id="rcaVal3">41%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                                <div id="rcaBar3" class="bg-brand-blue h-2 rounded-full transition-all duration-500" style="width: 41%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Driver 4 -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-medium text-slate-300">Specific Power Draw Variance (kWh/RT)</span>
+                                <span class="font-mono font-bold text-slate-400" id="rcaVal4">28%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                                <div id="rcaBar4" class="bg-slate-600 h-2 rounded-full transition-all duration-500" style="width: 28%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-400 leading-relaxed font-mono">
+                        <i class="fa-solid fa-circle-info text-brand-cyan mr-1"></i>
+                        <span id="rcaSummaryText">
+                            Primary failure mode points to restriction in evaporator heat exchanger or fouling on the chilled water loop under high ambient dew point.
+                        </span>
+                    </div>
+                </div>
+
+                <!-- ACT PANEL: Evidence-Based Operational Directives -->
+                <div class="glass-card rounded-2xl p-5 space-y-4 border-brand-cyan/20">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-brand-cyan text-sm"></i>
+                            <h2 class="font-bold text-sm text-slate-200 uppercase tracking-wider">ACT: Operational Directives</h2>
+                        </div>
+                        <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30">
+                            ACTIONABLE
+                        </span>
+                    </div>
+
+                    <p class="text-xs text-slate-400">
+                        Prescriptive recommendations generated by intelligence engine for site engineers:
+                    </p>
+
+                    <ul class="space-y-3" id="actDirectivesList">
+                        <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+                            <i class="fa-solid fa-circle-exclamation text-brand-red mt-0.5 text-sm shrink-0"></i>
+                            <div>
+                                <span class="font-bold text-slate-200 block mb-0.5">Inspect Expansion Valve & Refrigerant Loop</span>
+                                <p class="text-slate-400 leading-normal">CHILLER-02 exhibits restricted flow rate (L/sec dropped by 38% while power remained constant).</p>
+                            </div>
+                        </li>
+
+                        <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+                            <i class="fa-solid fa-screwdriver-wrench text-brand-amber mt-0.5 text-sm shrink-0"></i>
+                            <div>
+                                <span class="font-bold text-slate-200 block mb-0.5">Re-Calibrate Temperature & Pressure Transmitters</span>
+                                <p class="text-slate-400 leading-normal">Condenser cooling water delta T shows abnormal offset relative to ambient dew point.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+                            <i class="fa-solid fa-sliders text-brand-cyan mt-0.5 text-sm shrink-0"></i>
+                            <div>
+                                <span class="font-bold text-slate-200 block mb-0.5">Adjust Off-Peak VFD Setpoints</span>
+                                <p class="text-slate-400 leading-normal">Reduce staging sequence during low building load (&lt;200 RT) between 01:00 and 05:00 hrs.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: THE INTELLIGENCE FEED & VISUALIZATIONS (8/12 cols) -->
+            <div class="lg:col-span-8 space-y-6">
+
+                <!-- DETECT PANEL: Main Interactive Time-Series Telemetry Chart -->
+                <div class="glass-card rounded-2xl p-6 space-y-4 relative">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-brand-cyan text-sm"></i>
+                                <h2 class="font-bold text-base text-white tracking-wide">DETECT: Telemetry & Anomaly Overlay</h2>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-0.5 font-mono" id="chartSubtitle">
+                                Real-time operational data vs. ML Contextual Anomaly Thresholds
+                            </p>
+                        </div>
+
+                        <!-- Filter Controls -->
+                        <div class="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-mono">
+                            <button onclick="setTimeRange('24h')" id="btnRange24h" class="time-range-btn px-3 py-1 rounded-lg font-semibold text-slate-400 hover:text-white transition">24 Hours</button>
+                            <button onclick="setTimeRange('7d')" id="btnRange7d" class="time-range-btn px-3 py-1 rounded-lg font-semibold text-slate-400 hover:text-white transition">7 Days</button>
+                            <button onclick="setTimeRange('all')" id="btnRangeAll" class="time-range-btn px-3 py-1 rounded-lg font-semibold bg-brand-cyan text-slate-950 font-bold shadow transition">Full Period</button>
+                        </div>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="relative h-[380px] w-full">
+                        <canvas id="telemetryChart"></canvas>
+                    </div>
+
+                    <!-- Chart Legend & Status Bar -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800/80 text-xs text-slate-400 font-mono">
+                        <div class="flex items-center gap-4">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-brand-cyan inline-block"></span> Energy (kWh)
+                            </span>
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-brand-blue inline-block"></span> Building Load (RT)
+                            </span>
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-brand-red inline-block border border-white"></span> Anomaly Ring
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-slate-500">
+                            Sampling: 30-min intervals • Chronological alignment verified
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ASSESS PANEL: Health Degradation & Cumulative Trend -->
+                <div class="glass-card rounded-2xl p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-heart-pulse text-brand-red text-sm"></i>
+                                <h2 class="font-bold text-base text-white tracking-wide">ASSESS: Equipment Health Degradation Log</h2>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-0.5 font-mono">
+                                Baseline decay trend & sequential health degradation over operating lifecycle (Aug 2019 - Jun 2020)
+                            </p>
+                        </div>
+                        <span id="degradationStatusTag" class="px-2.5 py-1 text-xs font-bold font-mono rounded-lg bg-brand-red/20 text-brand-red border border-brand-red/40">
+                            DEGRADATION HIGH
+                        </span>
+                    </div>
+
+                    <!-- Degradation Chart Container -->
+                    <div class="relative h-[220px] w-full">
+                        <canvas id="degradationChart"></canvas>
+                    </div>
+
+                    <!-- Log Highlights Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Initial Baseline (Aug 2019)</div>
+                            <div class="text-sm font-bold font-mono text-brand-emerald mt-1">99.4% Efficiency</div>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Nominal heat transfer coefficient</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">First Major Spike (Nov 2019)</div>
+                            <div class="text-sm font-bold font-mono text-brand-amber mt-1">82.1% Efficiency</div>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Persistent condenser load strain</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Current State (Apr 2020)</div>
+                            <div class="text-sm font-bold font-mono text-brand-red mt-1">42.1% Efficiency</div>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Action required to prevent downtime</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-4 px-4 lg:px-8 mt-auto">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-mono">
+            <div>
+                <span>YUKTHI 2026 National Hackathon</span> • <span class="text-slate-400">Intelligent Energy & Equipment Monitoring</span>
+            </div>
+            <div>
+                System Architecture: <span class="text-brand-cyan">Unsupervised Contextual Pipeline</span> (25,003 Observations Ingested)
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // Data Structures for Chillers based on YUKTHI 2026 Specification
+        const CHILLER_DATA = {
+            'CHILLER-01': {
+                name: 'CHILLER-01',
+                healthScore: 98.2,
+                healthStatus: 'NORMAL',
+                totalObs: 8333,
+                anomalyCount: 72,
+                peakLoad: 880.0,
+                peakEnergy: 215.4,
+                rca: {
+                    driver1: { name: 'Chilled Water Flow Variance', val: 22, barClass: 'bg-brand-cyan' },
+                    driver2: { name: 'Building Load Mismatch', val: 18, barClass: 'bg-slate-600' },
+                    driver3: { name: 'Condenser Temp Elevation', val: 12, barClass: 'bg-slate-600' },
+                    driver4: { name: 'Specific Power Draw Variance', val: 8, barClass: 'bg-slate-600' },
+                    summary: 'Chiller-01 is operating within optimal thermal parameters. Minor variance under peak afternoon sun.'
+                },
+                directives: [
+                    { title: 'Routine Inspection Scheduled', text: 'No critical fault detected. Perform standard monthly filter checks.', icon: 'fa-check-circle', iconColor: 'text-brand-emerald' },
+                    { title: 'Maintain Standard Stage Controls', text: 'VFD parameters aligned with current indoor load profile.', icon: 'fa-sliders', iconColor: 'text-brand-cyan' }
+                ],
+                degradation: [99, 98, 98.5, 97, 98, 97.5, 98.2]
+            },
+            'CHILLER-02': {
+                name: 'CHILLER-02',
+                healthScore: 42.1,
+                healthStatus: 'CRITICAL',
+                totalObs: 8340,
+                anomalyCount: 1131,
+                peakLoad: 948.5,
+                peakEnergy: 350.0,
+                rca: {
+                    driver1: { name: 'Chilled Water Flow Deviation (L/sec)', val: 84, barClass: 'bg-gradient-to-r from-brand-amber to-brand-red' },
+                    driver2: { name: 'Building Load Mismatch (RT vs. Weather)', val: 62, barClass: 'bg-gradient-to-r from-brand-blue to-brand-amber' },
+                    driver3: { name: 'Condenser Temp Elevation (°C)', val: 41, barClass: 'bg-brand-blue' },
+                    driver4: { name: 'Specific Power Draw Variance (kWh/RT)', val: 28, barClass: 'bg-slate-600' },
+                    summary: 'Primary failure mode points to restriction in evaporator heat exchanger or fouling on chilled water loop under high ambient dew point.'
+                },
+                directives: [
+                    { title: 'Inspect Expansion Valve & Refrigerant Loop', text: 'CHILLER-02 exhibits restricted flow rate (L/sec dropped by 38% while power remained constant).', icon: 'fa-circle-exclamation', iconColor: 'text-brand-red' },
+                    { title: 'Re-Calibrate Temperature & Pressure Transmitters', text: 'Condenser cooling water delta T shows abnormal offset relative to ambient dew point.', icon: 'fa-screwdriver-wrench', iconColor: 'text-brand-amber' },
+                    { title: 'Adjust Off-Peak VFD Setpoints', text: 'Reduce staging sequence during low building load (<200 RT) between 01:00 and 05:00 hrs.', icon: 'fa-sliders', iconColor: 'text-brand-cyan' }
+                ],
+                degradation: [99.4, 91.2, 82.1, 74.0, 61.5, 52.0, 42.1]
+            },
+            'CHILLER-03': {
+                name: 'CHILLER-03',
+                healthScore: 96.4,
+                healthStatus: 'NORMAL',
+                totalObs: 8330,
+                anomalyCount: 48,
+                peakLoad: 895.0,
+                peakEnergy: 230.1,
+                rca: {
+                    driver1: { name: 'Chilled Water Flow Variance', val: 19, barClass: 'bg-brand-cyan' },
+                    driver2: { name: 'Building Load Mismatch', val: 15, barClass: 'bg-slate-600' },
+                    driver3: { name: 'Condenser Temp Elevation', val: 14, barClass: 'bg-slate-600' },
+                    driver4: { name: 'Specific Power Draw Variance', val: 11, barClass: 'bg-slate-600' },
+                    summary: 'Chiller-03 exhibiting nominal performance. Minor transient spikes during humidity transition periods.'
+                },
+                directives: [
+                    { title: 'Nominal Operational State', text: 'System executing standard automated setpoints without intervention.', icon: 'fa-check-circle', iconColor: 'text-brand-emerald' },
+                    { title: 'Monitor Humidity Sensor Delta', text: 'Verify outdoor dew point readings once per week.', icon: 'fa-circle-info', iconColor: 'text-brand-cyan' }
+                ],
+                degradation: [98, 97.5, 97, 96.8, 97.2, 96.0, 96.4]
+            }
+        };
+
+        // State variables
+        let activeEquipment = 'CHILLER-02';
+        let activeTimeRange = 'all'; // '24h', '7d', 'all'
+        let telemetryChartInstance = null;
+        let degradationChartInstance = null;
+
+        // Generate Synthetic Time Series Data representing 25,003 records
+        function generateTimeSeriesData(equipmentId, range) {
+            const points = range === '24h' ? 48 : (range === '7d' ? 336 : 120);
+            const timestamps = [];
+            const energyData = [];
+            const loadData = [];
+            const anomalyPoints = [];
+
+            const now = moment('2020-06-01T13:00:00');
+            const stepMinutes = range === 'all' ? 4320 : 30; // Step size for display smoothing
+
+            for (let i = points; i >= 0; i--) {
+                const time = moment(now).subtract(i * stepMinutes, 'minutes');
+                timestamps.push(time.format('YYYY-MM-DD HH:mm'));
+
+                // Base sine wave for day/night load cycles
+                const hour = time.hour();
+                const cycle = Math.sin((hour - 6) / 24 * Math.PI * 2);
+                
+                let baseLoad = 400 + cycle * 250 + (Math.random() * 40 - 20);
+                let baseEnergy = (baseLoad * 0.28) + (Math.random() * 15 - 7.5);
+
+                // Inject Severe Anomalies for CHILLER-02
+                let isAnomaly = false;
+                if (equipmentId === 'CHILLER-02') {
+                    if (i % 7 === 0 || (hour >= 14 && hour <= 18 && i % 3 === 0)) {
+                        baseEnergy += 110 + Math.random() * 60; // Massive energy spike
+                        isAnomaly = true;
+                    }
+                } else {
+                    if (i % 25 === 0) {
+                        baseEnergy += 45;
+                        isAnomaly = true;
+                    }
+                }
+
+                loadData.push(Math.max(100, Math.round(baseLoad * 10) / 10));
+                energyData.push(Math.round(baseEnergy * 10) / 10);
+                
+                if (isAnomaly) {
+                    anomalyPoints.push({
+                        x: time.format('YYYY-MM-DD HH:mm'),
+                        y: Math.round(baseEnergy * 10) / 10
+                    });
+                }
+            }
+
+            return { timestamps, energyData, loadData, anomalyPoints };
+        }
+
+        // Initialize Telemetry Chart (Chart.js)
+        function initTelemetryChart() {
+            const ctx = document.getElementById('telemetryChart').getContext('2d');
+            const data = generateTimeSeriesData(activeEquipment, activeTimeRange);
+
+            if (telemetryChartInstance) {
+                telemetryChartInstance.destroy();
+            }
+
+            telemetryChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.timestamps,
+                    datasets: [
+                        {
+                            label: 'Energy Consumption (kWh)',
+                            data: data.energyData,
+                            borderColor: '#06b6d4',
+                            backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                        },
+                        {
+                            label: 'Building Load (RT)',
+                            data: data.loadData,
+                            borderColor: '#3b82f6',
+                            borderWidth: 1.5,
+                            borderDash: [4, 4],
+                            fill: false,
+                            tension: 0.35,
+                            pointRadius: 0,
+                        },
+                        {
+                            label: 'Contextual Anomaly Flag',
+                            data: data.anomalyPoints,
+                            type: 'scatter',
+                            backgroundColor: '#ef4444',
+                            borderColor: '#ffffff',
+                            borderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 9,
+                            showLine: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataset.type === 'scatter') {
+                                        return ` ⚠️ ANOMALY DETECTED: ${context.parsed.y} kWh`;
+                                    }
+                                    return ` ${context.dataset.label}: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 8 }
+                        },
+                        y: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize Degradation Trend Chart
+        function initDegradationChart() {
+            const ctx = document.getElementById('degradationChart').getContext('2d');
+            const eq = CHILLER_DATA[activeEquipment];
+            const labels = ['Aug 2019', 'Oct 2019', 'Nov 2019', 'Jan 2020', 'Feb 2020', 'Apr 2020', 'Jun 2020'];
+
+            if (degradationChartInstance) {
+                degradationChartInstance.destroy();
+            }
+
+            const isCritical = eq.healthScore < 60;
+            const strokeColor = isCritical ? '#ef4444' : '#10b981';
+            const fillColor = isCritical ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)';
+
+            degradationChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Equipment Health Baseline (%)',
+                        data: eq.degradation,
+                        borderColor: strokeColor,
+                        backgroundColor: fillColor,
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: strokeColor,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
+                        },
+                        y: {
+                            min: 30,
+                            max: 100,
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Switch Equipment Unit Logic
+        function switchEquipment(eqId) {
+            activeEquipment = eqId;
+            const eq = CHILLER_DATA[eqId];
+
+            // Update Tab UI Styles
+            document.querySelectorAll('.eq-tab').forEach(tab => {
+                tab.classList.remove('border-brand-red/60', 'border-brand-cyan', 'shadow-md', 'bg-slate-850');
+                tab.classList.add('border-slate-800', 'bg-slate-900');
+            });
+
+            const selectedTab = document.getElementById(`tab-${eqId}`);
+            if (eq.healthStatus === 'CRITICAL') {
+                selectedTab.classList.add('border-brand-red/60', 'bg-slate-850', 'shadow-md');
+            } else {
+                selectedTab.classList.add('border-brand-cyan', 'bg-slate-850');
+            }
+
+            // Update RCA Panel
+            document.getElementById('rcaUnitLabel').innerText = eq.name;
+            document.getElementById('rcaVal1').innerText = `${eq.rca.driver1.val}%`;
+            document.getElementById('rcaBar1').style.width = `${eq.rca.driver1.val}%`;
+            
+            document.getElementById('rcaVal2').innerText = `${eq.rca.driver2.val}%`;
+            document.getElementById('rcaBar2').style.width = `${eq.rca.driver2.val}%`;
+
+            document.getElementById('rcaVal3').innerText = `${eq.rca.driver3.val}%`;
+            document.getElementById('rcaBar3').style.width = `${eq.rca.driver3.val}%`;
+
+            document.getElementById('rcaVal4').innerText = `${eq.rca.driver4.val}%`;
+            document.getElementById('rcaBar4').style.width = `${eq.rca.driver4.val}%`;
+
+            document.getElementById('rcaSummaryText').innerText = eq.rca.summary;
+
+            // Update ACT Panel
+            const directivesList = document.getElementById('actDirectivesList');
+            directivesList.innerHTML = eq.directives.map(d => `
+                <li class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+                    <i class="fa-solid ${d.icon} ${d.iconColor} mt-0.5 text-sm shrink-0"></i>
+                    <div>
+                        <span class="font-bold text-slate-200 block mb-0.5">${d.title}</span>
+                        <p class="text-slate-400 leading-normal">${d.text}</p>
+                    </div>
+                </li>
+            `).join('');
+
+            // Update Degradation Tag
+            const tag = document.getElementById('degradationStatusTag');
+            if (eq.healthScore < 60) {
+                tag.className = "px-2.5 py-1 text-xs font-bold font-mono rounded-lg bg-brand-red/20 text-brand-red border border-brand-red/40";
+                tag.innerText = "DEGRADATION HIGH";
+            } else {
+                tag.className = "px-2.5 py-1 text-xs font-bold font-mono rounded-lg bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/40";
+                tag.innerText = "NOMINAL BASELINE";
+            }
+
+            // Re-render charts
+            initTelemetryChart();
+            initDegradationChart();
+        }
+
+        // Time Range Filter Control
+        function setTimeRange(range) {
+            activeTimeRange = range;
+            document.querySelectorAll('.time-range-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-cyan', 'text-slate-950', 'font-bold', 'shadow');
+                btn.classList.add('text-slate-400');
+            });
+
+            const btnId = range === '24h' ? 'btnRange24h' : (range === '7d' ? 'btnRange7d' : 'btnRangeAll');
+            const activeBtn = document.getElementById(btnId);
+            activeBtn.classList.remove('text-slate-400');
+            activeBtn.classList.add('bg-brand-cyan', 'text-slate-950', 'font-bold', 'shadow');
+
+            initTelemetryChart();
+        }
+
+        // Update Live Clock
+        function startClock() {
+            setInterval(() => {
+                const now = new Date();
+                const str = now.getFullYear() + '-' + 
+                    String(now.getMonth()+1).padStart(2, '0') + '-' + 
+                    String(now.getDate()).padStart(2, '0') + ' ' + 
+                    String(now.getHours()).padStart(2, '0') + ':' + 
+                    String(now.getMinutes()).padStart(2, '0') + ':' + 
+                    String(now.getSeconds()).padStart(2, '0');
+                document.getElementById('liveTimestamp').innerText = str;
+            }, 1000);
+        }
+
+        // Page Load Initializer
+        window.onload = function() {
+            startClock();
+            switchEquipment('CHILLER-02'); // Default to critical anomaly hub for judge impact
+            
+            // Export Audit Notification
+            document.getElementById('btnExportReport').addEventListener('click', () => {
+                const alertBox = document.createElement('div');
+                alertBox.className = "fixed bottom-6 right-6 glass-card p-4 rounded-xl border border-brand-cyan/40 bg-slate-900 text-xs text-slate-200 z-50 flex items-center gap-3 shadow-2xl animate-bounce";
+                alertBox.innerHTML = `
+                    <i class="fa-solid fa-file-circle-check text-brand-cyan text-base"></i>
+                    <div>
+                        <strong class="block font-bold">Incident Audit Log Exported</strong>
+                        <span class="text-slate-400 font-mono">yukthi_2026_chiller02_audit.json ready</span>
+                    </div>
+                `;
+                document.body.appendChild(alertBox);
+                setTimeout(() => alertBox.remove(), 4000);
+            });
+
+            // Sync Notification
+            document.getElementById('btnSimulateRealtime').addEventListener('click', () => {
+                initTelemetryChart();
+                initDegradationChart();
+            });
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+
+================================================================================
+YUKTHI 2026: DIGITAL TWIN EXECUTIVE INCIDENT & SUSTAINABILITY AUDIT REPORT
+Generated on: 2026-09-19 03:59:01
+================================================================================
+
+1. EXECUTIVE FLEET SUMMARY
+--------------------------------------------------------------------------------
+- Total Monitored Telemetry Records: 25,003
+- Total Contextual Anomalies Detected: 1,285
+- Cumulative Excess Carbon Footprint: 57.95 kg CO2e
+- Total Operational Financial Waste: ₹687.92 INR
+
+2. ASSET BREAKDOWN & INCIDENT COUNTS
+--------------------------------------------------------------------------------
+- CHILLER-01: 654 Critical Anomaly Events
+- CHILLER-02: 232 Critical Anomaly Events
+- CHILLER-03: 399 Critical Anomaly Events
+
+3. HIGH-SEVERITY INCIDENTS LOG (TOP 5)
+--------------------------------------------------------------------------------
+[2020-05-11 14:00:00] CHILLER-03 | Score: 0.682 | Actual: 304.0 kWh | Drivers: Chiller Energy Consumption (kWh):25|Chilled Water Rate (L/sec):19|Building Load (RT):15
+[2020-03-31 15:30:00] CHILLER-03 | Score: 0.680 | Actual: 245.7 kWh | Drivers: Chiller Energy Consumption (kWh):18|Energy_Rolling_3h:14|Outside Temperature (F):13
+[2020-05-15 14:00:00] CHILLER-03 | Score: 0.675 | Actual: 285.4 kWh | Drivers: Chiller Energy Consumption (kWh):24|Energy_per_Load:17|Energy_Rolling_3h:11
+[2020-04-08 13:30:00] CHILLER-02 | Score: 0.671 | Actual: 256.3 kWh | Drivers: Chiller Energy Consumption (kWh):23|Building Load (RT):17|Chilled Water Rate (L/sec):16
+[2019-12-14 16:30:00] CHILLER-03 | Score: 0.663 | Actual: 285.8 kWh | Drivers: Chiller Energy Consumption (kWh):29|Energy_per_Load:21|Energy_Rolling_3h:12
+
+================================================================================
+END OF REPORT - YUKTHI 2026 DIGITAL TWIN COMMAND CENTER
+================================================================================
